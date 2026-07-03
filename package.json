@@ -1,0 +1,25 @@
+{
+  "name": "study-tech",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "jest --selectProjects unit",
+    "test:unit": "jest --selectProjects unit",
+    "test:acceptance": "start-server-and-test \"vite --host 127.0.0.1\" http://127.0.0.1:5173 \"jest --selectProjects acceptance --runInBand\""
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.43",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
+    "@types/selenium-webdriver": "^4.35.6",
+    "jest": "^30.4.2",
+    "selenium-webdriver": "^4.45.0",
+    "start-server-and-test": "^2.1.5",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.3"
+  }
+}
