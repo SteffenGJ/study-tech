@@ -94,6 +94,17 @@ h4 {
   border: 1px solid #c9d7ec;
 }
 
+.filter-controls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.filter-controls .secondary-button {
+  width: auto;
+}
+
 .composer {
   margin-top: 1.2rem;
   padding-top: 1rem;
@@ -252,5 +263,9 @@ button:hover {
 
   button {
     width: 100%;
+  }
+
+  .filter-controls {
+    grid-template-columns: 1fr;
   }
 }

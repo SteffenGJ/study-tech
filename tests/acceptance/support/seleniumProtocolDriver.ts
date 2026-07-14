@@ -5,6 +5,7 @@ export default class SeleniumProtocolDriver {
   private readonly appUrl: string
   private readonly flashcardService = new FlashcardService()
   private currentPage: 'home' | 'flashcards' = 'home'
+  private currentSubjectFilter?: string
 
   constructor(appUrl = 'http://127.0.0.1:5173') {
     this.appUrl = appUrl
@@ -21,6 +22,30 @@ export default class SeleniumProtocolDriver {
     }
 
     this.flashcardService.addFlashcard(command, options)
+  }
+
+  selectBySubject(subject: string): void {
+    if (this.currentPage !== 'flashcards') {
+      throw new Error('Flashcards page must be open before filtering flashcards')
+    }
+
+    this.currentSubjectFilter = subject
+  }
+
+  assertCurrentFlashcardsAre(subject: string): void {
+    if (this.currentPage !== 'flashcards') {
+      throw new Error('Flashcards page must be open before asserting filtered flashcards')
+    }
+
+    const filtered = this.flashcardService.getFlashcardsBySubject(this.currentSubjectFilter ?? subject)
+
+    if (filtered.length === 0) {
+      throw new Error()
+    }
+
+    if (filtered.some((flashcard) => flashcard.subject !== subject)) {
+      throw new Error()
+    }
   }
 
   assertFlashcardAddedTo(topic: string): void {

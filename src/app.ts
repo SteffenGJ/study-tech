@@ -61,6 +61,22 @@ export function renderFlashcardListMarkup(flashcards: Flashcard[]): string {
   return flashcards.map((flashcard) => renderFlashcard(flashcard)).join('')
 }
 
+export function renderFlashcardListForSubject(flashcards: Flashcard[], subject: string): string {
+  const selectedSubject = subject.trim()
+
+  if (!selectedSubject) {
+    return renderFlashcardListMarkup(flashcards)
+  }
+
+  const filteredFlashcards = flashcards.filter((flashcard) => flashcard.subject === selectedSubject)
+
+  if (filteredFlashcards.length === 0) {
+    return `<p class="empty-state">No flashcards found for subject: ${escapeHtml(selectedSubject)}</p>`
+  }
+
+  return renderFlashcardListMarkup(filteredFlashcards)
+}
+
 export function toFlashcardCommand(values: AddFlashcardFormValues): AddFlashcardCommand {
   return {
     subject: values.subject.trim(),
@@ -149,6 +165,14 @@ export function createAppMarkup(): string {
               Add flashcard
             </button>
           </div>
+          <label>
+            Filter by subject
+            <div class="filter-controls">
+              <input name="subject-filter" data-testid="subject-filter" placeholder="e.g. History" />
+              <button type="button" class="secondary-button" data-testid="apply-subject-filter-button">Apply filter</button>
+              <button type="button" class="secondary-button" data-testid="reset-subject-filter-button">Reset filter</button>
+            </div>
+          </label>
           <div class="flashcards" data-testid="flashcards"></div>
         </section>
 
@@ -195,14 +219,36 @@ export function mountApp(root: HTMLElement, service = new FlashcardService()): v
   const composer = root.querySelector<HTMLElement>('[data-testid="composer"]')
   const openComposerButton = root.querySelector<HTMLButtonElement>('[data-testid="open-composer-button"]')
   const successBanner = root.querySelector<HTMLElement>('[data-testid="success-banner"]')
+  const subjectFilter = root.querySelector<HTMLInputElement>('[data-testid="subject-filter"]')
+  const applySubjectFilterButton = root.querySelector<HTMLButtonElement>('[data-testid="apply-subject-filter-button"]')
+  const resetSubjectFilterButton = root.querySelector<HTMLButtonElement>('[data-testid="reset-subject-filter-button"]')
 
-  if (!form || !feedback || !flashcardsContainer || !composer || !openComposerButton || !successBanner) {
+  if (
+    !form
+    || !feedback
+    || !flashcardsContainer
+    || !composer
+    || !openComposerButton
+    || !successBanner
+    || !subjectFilter
+    || !applySubjectFilterButton
+    || !resetSubjectFilterButton
+  ) {
     throw new Error('Could not initialize Study Tech app')
   }
 
   let hideBannerTimer: ReturnType<typeof setTimeout> | undefined
 
   flashcardsContainer.innerHTML = renderFlashcardListMarkup(service.getFlashcards())
+
+  applySubjectFilterButton.addEventListener('click', () => {
+    flashcardsContainer.innerHTML = renderFlashcardListForSubject(service.getFlashcards(), subjectFilter.value)
+  })
+
+  resetSubjectFilterButton.addEventListener('click', () => {
+    subjectFilter.value = ''
+    flashcardsContainer.innerHTML = renderFlashcardListMarkup(service.getFlashcards())
+  })
 
   openComposerButton.addEventListener('click', () => {
     const isHidden = composer.classList.toggle('is-hidden')
@@ -224,7 +270,7 @@ export function mountApp(root: HTMLElement, service = new FlashcardService()): v
       answer: String(formData.get('answer') ?? ''),
     })
 
-    flashcardsContainer.innerHTML = renderFlashcardListMarkup(result.flashcards)
+    flashcardsContainer.innerHTML = renderFlashcardListForSubject(result.flashcards, subjectFilter.value)
 
     if (result.feedback.kind === 'error') {
       feedback.textContent = result.feedback.message

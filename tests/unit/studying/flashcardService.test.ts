@@ -57,4 +57,24 @@ describe('FlashcardService', () => {
       },
     })
   })
+
+  it('should filter flashcards by subject', () => {
+    const service = new FlashcardService()
+
+    service.addFlashcard({
+      subject: 'History',
+      topic: 'Ancient Egypt',
+      question: 'Who built the pyramids?',
+      answer: 'The egyptians',
+    })
+    service.addFlashcard({
+      subject: 'Science',
+      topic: 'Physics',
+      question: 'What is gravity?',
+      answer: 'Attraction between masses',
+    })
+
+    expect(service.getFlashcardsBySubject('History')).toHaveLength(1)
+    expect(service.getFlashcardsBySubject('History')[0].topic).toBe('Ancient Egypt')
+  })
 })

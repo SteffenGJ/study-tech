@@ -47,6 +47,10 @@ export class FlashcardService {
     return [...this.flashcards]
   }
 
+  getFlashcardsBySubject(subject: string): Flashcard[] {
+    return this.flashcards.filter((flashcard) => flashcard.subject === subject)
+  }
+
   wasLastAddSuccessful(): boolean {
     return this.lastAddResult.success
   }

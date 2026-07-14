@@ -9,6 +9,8 @@ describe('Studying DSL', () => {
       assertSuccess: jest.fn(),
       assertFlashcardNotAdded: jest.fn(),
       assertUserInformedOfError: jest.fn(),
+      selectBySubject: jest.fn(),
+      assertCurrentFlashcardsAre: jest.fn(),
     }
 
     const studying = new Studying(driver)
@@ -40,6 +42,8 @@ describe('Studying DSL', () => {
       assertSuccess: jest.fn(),
       assertFlashcardNotAdded: jest.fn(),
       assertUserInformedOfError: jest.fn(),
+      selectBySubject: jest.fn(),
+      assertCurrentFlashcardsAre: jest.fn(),
     }
 
     const studying = new Studying(driver)
@@ -60,5 +64,26 @@ describe('Studying DSL', () => {
       },
       { simulateFailure: true },
     )
+  })
+
+  it('should select flashcards by subject and assert current list', () => {
+    const driver = {
+      goToFlashcards: jest.fn(),
+      addFlashcard: jest.fn(),
+      assertFlashcardAddedTo: jest.fn(),
+      assertSuccess: jest.fn(),
+      assertFlashcardNotAdded: jest.fn(),
+      assertUserInformedOfError: jest.fn(),
+      selectBySubject: jest.fn(),
+      assertCurrentFlashcardsAre: jest.fn(),
+    }
+
+    const studying = new Studying(driver)
+
+    studying.selectBySubject('subject: History')
+    studying.assertCurrentFlashcardsAre('subject: History')
+
+    expect(driver.selectBySubject).toHaveBeenCalledWith('History')
+    expect(driver.assertCurrentFlashcardsAre).toHaveBeenCalledWith('History')
   })
 })

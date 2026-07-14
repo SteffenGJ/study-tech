@@ -1,6 +1,7 @@
 import {
   createAppMarkup,
   renderFlashcardListMarkup,
+  renderFlashcardListForSubject,
   submitFlashcard,
   toFlashcardCommand,
   SUCCESS_BANNER_DURATION_MS,
@@ -28,6 +29,14 @@ describe('app', () => {
 
     expect(markup).toContain('data-testid="composer"')
     expect(markup).toContain('composer is-hidden')
+  })
+
+  it('should render subject filter controls with apply and reset buttons', () => {
+    const markup = createAppMarkup()
+
+    expect(markup).toContain('data-testid="subject-filter"')
+    expect(markup).toContain('data-testid="apply-subject-filter-button"')
+    expect(markup).toContain('data-testid="reset-subject-filter-button"')
   })
 
   it('should not show any simulate error option in the ui', () => {
@@ -100,5 +109,42 @@ describe('app', () => {
     expect(markup).toContain('Ancient Egypt')
     expect(markup).toContain('https://img.test/q.jpg')
     expect(markup).toContain('https://img.test/a.jpg')
+  })
+
+  it('should render only flashcards for selected subject', () => {
+    const service = new FlashcardService()
+
+    service.addFlashcard({
+      subject: 'History',
+      topic: 'Ancient Egypt',
+      question: 'Who built the pyramids?',
+      answer: 'The egyptians',
+    })
+    service.addFlashcard({
+      subject: 'Science',
+      topic: 'Physics',
+      question: 'What is gravity?',
+      answer: 'Attraction between masses',
+    })
+
+    const markup = renderFlashcardListForSubject(service.getFlashcards(), 'History')
+
+    expect(markup).toContain('Ancient Egypt')
+    expect(markup).not.toContain('Physics')
+  })
+
+  it('should render a filter empty-state when no flashcards match subject', () => {
+    const service = new FlashcardService()
+
+    service.addFlashcard({
+      subject: 'Science',
+      topic: 'Physics',
+      question: 'What is gravity?',
+      answer: 'Attraction between masses',
+    })
+
+    const markup = renderFlashcardListForSubject(service.getFlashcards(), 'History')
+
+    expect(markup).toContain('No flashcards found for subject: History')
   })
 })

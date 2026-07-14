@@ -8,6 +8,8 @@ interface StudyingDriver {
   assertSuccess(): void
   assertFlashcardNotAdded(): void
   assertUserInformedOfError(): void
+  selectBySubject(subject: string): void
+  assertCurrentFlashcardsAre(subject: string): void
 }
 
 export default class Studying {
@@ -51,6 +53,14 @@ export default class Studying {
 
   goToFlashcards(): void {
     this.driver.goToFlashcards()
+  }
+
+  selectBySubject(subject: string): void {
+    this.driver.selectBySubject(this.parseField(subject, 'subject') || this.defaults.subject)
+  }
+
+  assertCurrentFlashcardsAre(subject: string): void {
+    this.driver.assertCurrentFlashcardsAre(this.parseField(subject, 'subject') || this.defaults.subject)
   }
 
   private toAddFlashcardCommand(subject: string, topic: string, question: string, answer: string): AddFlashcardCommand {
