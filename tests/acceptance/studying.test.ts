@@ -25,4 +25,16 @@ describe("Adding flashcards", () => {
         studying.assertUserInformedOfError()
     })
 
+    test("should be able to add images to questions", () => {
+        studying.goToFlashcards()
+        studying.addFlashcard("subject: History", "topic: Ancient Egypt", "question: Who build these monuments? IMAGE_URL(https://www.somephoto.com/of-pyramids.jpg)", "answer: The egyptians")
+        studying.assertFlashcardAddedTo("topic: Ancient Egypt")
+    })
+
+    test("should be able to add images to answers", () => {
+        studying.goToFlashcards()
+        studying.addFlashcard("subject: History", "topic: Ancient Egypt", "question: Who build these monuments?", "answer: The egyptians IMAGE_URL(https://www.somephoto.com/of-pyramids.jpg)")
+        studying.assertFlashcardAddedTo("topic: Ancient Egypt")
+    })
+
 })

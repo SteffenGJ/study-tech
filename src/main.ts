@@ -1,4 +1,10 @@
 import './style.css'
-import { createAppMarkup } from './app'
+import { mountApp } from './app'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = createAppMarkup()
+const rootElement = document.querySelector<HTMLDivElement>('#app')
+
+if (!rootElement) {
+  throw new Error('Missing #app root element')
+}
+
+mountApp(rootElement)
