@@ -2,65 +2,69 @@ import type { AddFlashcardCommand } from '../../../src/studying/types'
 import SeleniumProtocolDriver from '../support/seleniumProtocolDriver'
 
 interface StudyingDriver {
-  goToFlashcards(): void
-  addFlashcard(command: AddFlashcardCommand, options?: { simulateFailure?: boolean }): void
-  assertFlashcardAddedTo(topic: string): void
-  assertSuccess(): void
-  assertFlashcardNotAdded(): void
-  assertUserInformedOfError(): void
-  selectBySubject(subject: string): void
-  assertCurrentFlashcardsAre(subject: string): void
+  goToFlashcards(): Promise<void>
+  addFlashcard(command: AddFlashcardCommand, options?: { simulateFailure?: boolean }): Promise<void>
+  selectBySubject(subject: string): Promise<void>
+  assertCurrentFlashcardsAre(subject: string): Promise<void>
+  assertFlashcardAddedTo(topic: string): Promise<void>
+  assertSuccess(): Promise<void>
+  assertFlashcardNotAdded(): Promise<void>
+  assertUserInformedOfError(): Promise<void>
+  close(): Promise<void>
 }
 
 export default class Studying {
-  private readonly driver: StudyingDriver
-  private defaults: Pick<AddFlashcardCommand, 'subject' | 'topic'> = {
-    subject: '',
-    topic: '',
+  private readonly driverPromise: Promise<StudyingDriver>
+  private defaults: { subject?: string; topic?: string } = {}
+
+  constructor(driverPromise: Promise<StudyingDriver> = SeleniumProtocolDriver.create()) {
+    this.driverPromise = driverPromise
   }
 
-  constructor(driver: StudyingDriver = new SeleniumProtocolDriver('http://127.0.0.1:5173')) {
-    this.driver = driver
+  async destroy(): Promise<void> {
+    const driver = await this.driverPromise
+
+    await driver.close()
   }
 
-  assertUserInformedOfError(): void {
-    this.driver.assertUserInformedOfError()
-  }
-
-  assertFlashcardNotAdded(): void {
-    this.driver.assertFlashcardNotAdded()
-  }
-
-  tryAddFlashcard(subject: string, topic: string, question: string, answer: string): void {
+  async tryAddFlashcard(subject: string, topic: string, question: string, answer: string): Promise<void> {
     const command = this.toAddFlashcardCommand(subject, topic, question, answer)
 
-    this.driver.addFlashcard(command, { simulateFailure: true })
+    await (await this.driverPromise).addFlashcard(command, { simulateFailure: true })
   }
 
-  assertUserInformedOfSucces(): void {
-    this.driver.assertSuccess()
+  async assertUserInformedOfSucces(): Promise<void> {
+    await (await this.driverPromise).assertSuccess()
   }
 
-  assertFlashcardAddedTo(topic: string): void {
-    this.driver.assertFlashcardAddedTo(this.parseField(topic, 'topic') || this.defaults.topic)
+  async assertFlashcardAddedTo(topic: string): Promise<void> {
+    await (await this.driverPromise).assertFlashcardAddedTo(this.parseField(topic, 'topic') || this.defaults.topic || '')
   }
 
-  addFlashcard(subject: string, topic: string, question: string, answer: string): void {
+  async addFlashcard(subject: string, topic: string, question: string, answer: string): Promise<void> {
     const command = this.toAddFlashcardCommand(subject, topic, question, answer)
 
-    this.driver.addFlashcard(command)
+    await (await this.driverPromise).addFlashcard(command)
   }
 
-  goToFlashcards(): void {
-    this.driver.goToFlashcards()
+  async goToFlashcards(): Promise<void> {
+    await (await this.driverPromise).goToFlashcards()
   }
 
-  selectBySubject(subject: string): void {
-    this.driver.selectBySubject(this.parseField(subject, 'subject') || this.defaults.subject)
+  async selectBySubject(subject: string): Promise<void> {
+    await (await this.driverPromise).selectBySubject(this.parseField(subject, 'subject') || this.defaults.subject || '')
   }
 
-  assertCurrentFlashcardsAre(subject: string): void {
-    this.driver.assertCurrentFlashcardsAre(this.parseField(subject, 'subject') || this.defaults.subject)
+  async assertCurrentFlashcardsAre(subject: string): Promise<void> {
+    await (await this.driverPromise).assertCurrentFlashcardsAre(this.parseField(subject, 'subject') || this.defaults.subject || '')
+  }
+
+  async assertFlashcardNotAdded(): Promise<void> {
+    await (await this.driverPromise).assertFlashcardNotAdded()
+  }
+
+  async assertUserInformedOfError(): Promise<void> {
+    await (await this.driverPromise).assertUserInformedOfError()
   }
 
   private toAddFlashcardCommand(subject: string, topic: string, question: string, answer: string): AddFlashcardCommand {
