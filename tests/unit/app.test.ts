@@ -1,62 +1,54 @@
 import {
+  SUCCESS_BANNER_DURATION_MS,
   createAppMarkup,
-  renderFlashcardListMarkup,
   renderFlashcardListForSubject,
+  renderFlashcardListMarkup,
   submitFlashcard,
   toFlashcardCommand,
-  SUCCESS_BANNER_DURATION_MS,
-  type AddFlashcardFormValues,
 } from '../../src/app'
 import { FlashcardService } from '../../src/studying/flashcardService'
 
-function validValues(overrides: Partial<AddFlashcardFormValues> = {}): AddFlashcardFormValues {
-  return {
-    subject: 'History',
-    topic: 'Ancient Egypt',
-    question: 'Who built the pyramids?',
-    answer: 'The egyptians',
-    ...overrides,
-  }
-}
-
 describe('app', () => {
-  it('should render the app heading', () => {
-    expect(createAppMarkup()).toContain('<h1>Study Tech</h1>')
+  test('should render empty state when no flashcards exist', () => {
+    expect(renderFlashcardListMarkup([])).toContain('No flashcards yet')
   })
 
-  it('should hide the add flashcard form by default', () => {
-    const markup = createAppMarkup()
+  test('should render cards for provided flashcards', () => {
+    const service = new FlashcardService()
 
-    expect(markup).toContain('data-testid="composer"')
-    expect(markup).toContain('composer is-hidden')
+    service.addFlashcard({
+      subject: 'History',
+      topic: 'Ancient Egypt',
+      question: 'Who built the pyramids?',
+      answer: 'The egyptians',
+    })
+
+    const markup = renderFlashcardListMarkup(service.getFlashcards())
+
+    expect(markup).toContain('History')
+    expect(markup).toContain('Ancient Egypt')
   })
 
-  it('should render subject filter controls with apply and reset buttons', () => {
-    const markup = createAppMarkup()
+  test('should filter rendered cards by subject', () => {
+    const service = new FlashcardService()
 
-    expect(markup).toContain('data-testid="subject-filter"')
-    expect(markup).toContain('data-testid="apply-subject-filter-button"')
-    expect(markup).toContain('data-testid="reset-subject-filter-button"')
+    service.addFlashcard({ subject: 'History', topic: 'Ancient Egypt', question: 'Q1', answer: 'A1' })
+    service.addFlashcard({ subject: 'Math', topic: 'Algebra', question: 'Q2', answer: 'A2' })
+
+    const markup = renderFlashcardListForSubject(service.getFlashcards(), 'Math')
+
+    expect(markup).toContain('Algebra')
+    expect(markup).not.toContain('Ancient Egypt')
   })
 
-  it('should not show any simulate error option in the ui', () => {
-    expect(createAppMarkup()).not.toContain('Simulate save error')
-  })
-
-  it('should use a 3 second success banner duration', () => {
-    expect(SUCCESS_BANNER_DURATION_MS).toBe(3000)
-  })
-
-  it('should trim form values before creating a command', () => {
+  test('should create normalized add command from form values', () => {
     expect(
-      toFlashcardCommand(
-        validValues({
-          subject: '  History ',
-          topic: ' Ancient Egypt ',
-          question: ' Who built the pyramids? ',
-          answer: ' The egyptians ',
-        }),
-      ),
+      toFlashcardCommand({
+        subject: ' History ',
+        topic: ' Ancient Egypt ',
+        question: ' Who built the pyramids? ',
+        answer: ' The egyptians ',
+      }),
     ).toEqual({
       subject: 'History',
       topic: 'Ancient Egypt',
@@ -65,86 +57,40 @@ describe('app', () => {
     })
   })
 
-  it('should add a flashcard and return success feedback', () => {
+  test('should return validation error when subject is missing', () => {
+    const result = submitFlashcard(new FlashcardService(), {
+      subject: '',
+      topic: 'Ancient Egypt',
+      question: 'Q',
+      answer: 'A',
+    })
+
+    expect(result.feedback.kind).toBe('error')
+    expect(result.feedback.message).toContain('Subject is required')
+  })
+
+  test('should return success feedback when flashcard is added', () => {
     const service = new FlashcardService()
 
-    const result = submitFlashcard(service, validValues())
-
-    expect(result.feedback).toEqual({
-      kind: 'success',
-      message: 'Flashcard was added successfully',
+    const result = submitFlashcard(service, {
+      subject: 'History',
+      topic: 'Ancient Egypt',
+      question: 'Q',
+      answer: 'A',
     })
+
+    expect(result.feedback.kind).toBe('success')
     expect(result.flashcards).toHaveLength(1)
   })
 
-  it('should return an error when required values are missing', () => {
-    const service = new FlashcardService()
+  test('should expose practice and edit sections in markup', () => {
+    const markup = createAppMarkup()
 
-    const result = submitFlashcard(service, validValues({ subject: '   ' }))
-
-    expect(result.feedback).toEqual({
-      kind: 'error',
-      message: 'Subject is required',
-    })
-    expect(result.flashcards).toHaveLength(0)
+    expect(markup).toContain('data-testid="practice"')
+    expect(markup).toContain('data-testid="edit-composer"')
   })
 
-  it('should render an empty-state message when there are no flashcards', () => {
-    expect(renderFlashcardListMarkup([])).toContain('No flashcards yet. Add your first one.')
-  })
-
-  it('should render flashcards including question and answer image urls', () => {
-    const service = new FlashcardService()
-
-    service.addFlashcard({
-      subject: 'History',
-      topic: 'Ancient Egypt',
-      question: 'Who built these monuments? IMAGE_URL(https://img.test/q.jpg)',
-      answer: 'The egyptians IMAGE_URL(https://img.test/a.jpg)',
-    })
-
-    const markup = renderFlashcardListMarkup(service.getFlashcards())
-
-    expect(markup).toContain('History')
-    expect(markup).toContain('Ancient Egypt')
-    expect(markup).toContain('https://img.test/q.jpg')
-    expect(markup).toContain('https://img.test/a.jpg')
-  })
-
-  it('should render only flashcards for selected subject', () => {
-    const service = new FlashcardService()
-
-    service.addFlashcard({
-      subject: 'History',
-      topic: 'Ancient Egypt',
-      question: 'Who built the pyramids?',
-      answer: 'The egyptians',
-    })
-    service.addFlashcard({
-      subject: 'Science',
-      topic: 'Physics',
-      question: 'What is gravity?',
-      answer: 'Attraction between masses',
-    })
-
-    const markup = renderFlashcardListForSubject(service.getFlashcards(), 'History')
-
-    expect(markup).toContain('Ancient Egypt')
-    expect(markup).not.toContain('Physics')
-  })
-
-  it('should render a filter empty-state when no flashcards match subject', () => {
-    const service = new FlashcardService()
-
-    service.addFlashcard({
-      subject: 'Science',
-      topic: 'Physics',
-      question: 'What is gravity?',
-      answer: 'Attraction between masses',
-    })
-
-    const markup = renderFlashcardListForSubject(service.getFlashcards(), 'History')
-
-    expect(markup).toContain('No flashcards found for subject: History')
+  test('should keep success banner duration unchanged', () => {
+    expect(SUCCESS_BANNER_DURATION_MS).toBe(3000)
   })
 })

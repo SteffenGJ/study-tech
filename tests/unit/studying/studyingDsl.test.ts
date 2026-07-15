@@ -1,7 +1,7 @@
 import Studying from '../../acceptance/dsl/studying'
 
 describe('Studying DSL', () => {
-  it('should parse fields and call driver to add a flashcard', () => {
+  it('should parse fields and call driver to add a flashcard', async () => {
     const driver = {
       goToFlashcards: jest.fn(),
       addFlashcard: jest.fn(),
@@ -11,18 +11,19 @@ describe('Studying DSL', () => {
       assertUserInformedOfError: jest.fn(),
       selectBySubject: jest.fn(),
       assertCurrentFlashcardsAre: jest.fn(),
+      close: jest.fn(),
     }
 
-    const studying = new Studying(driver)
+    const studying = new Studying(Promise.resolve(driver))
 
-    studying.goToFlashcards()
-    studying.addFlashcard(
+    await studying.goToFlashcards()
+    await studying.addFlashcard(
       'subject: History',
       'topic: Ancient Egypt',
       'question: Who built these monuments? IMAGE_URL(https://img.test/q.jpg)',
       'answer: The egyptians',
     )
-    studying.assertFlashcardAddedTo('topic: Ancient Egypt')
+    await studying.assertFlashcardAddedTo('topic: Ancient Egypt')
 
     expect(driver.goToFlashcards).toHaveBeenCalledTimes(1)
     expect(driver.addFlashcard).toHaveBeenCalledWith({
@@ -34,7 +35,7 @@ describe('Studying DSL', () => {
     expect(driver.assertFlashcardAddedTo).toHaveBeenCalledWith('Ancient Egypt')
   })
 
-  it('should simulate a failed add operation', () => {
+  it('should simulate a failed add operation', async () => {
     const driver = {
       goToFlashcards: jest.fn(),
       addFlashcard: jest.fn(),
@@ -44,11 +45,12 @@ describe('Studying DSL', () => {
       assertUserInformedOfError: jest.fn(),
       selectBySubject: jest.fn(),
       assertCurrentFlashcardsAre: jest.fn(),
+      close: jest.fn(),
     }
 
-    const studying = new Studying(driver)
+    const studying = new Studying(Promise.resolve(driver))
 
-    studying.tryAddFlashcard(
+    await studying.tryAddFlashcard(
       'subject: History',
       'topic: Ancient Egypt',
       'question: Who built the pyramids?',
@@ -66,7 +68,7 @@ describe('Studying DSL', () => {
     )
   })
 
-  it('should select flashcards by subject and assert current list', () => {
+  it('should select flashcards by subject and assert current list', async () => {
     const driver = {
       goToFlashcards: jest.fn(),
       addFlashcard: jest.fn(),
@@ -76,12 +78,13 @@ describe('Studying DSL', () => {
       assertUserInformedOfError: jest.fn(),
       selectBySubject: jest.fn(),
       assertCurrentFlashcardsAre: jest.fn(),
+      close: jest.fn(),
     }
 
-    const studying = new Studying(driver)
+    const studying = new Studying(Promise.resolve(driver))
 
-    studying.selectBySubject('subject: History')
-    studying.assertCurrentFlashcardsAre('subject: History')
+    await studying.selectBySubject('subject: History')
+    await studying.assertCurrentFlashcardsAre('subject: History')
 
     expect(driver.selectBySubject).toHaveBeenCalledWith('History')
     expect(driver.assertCurrentFlashcardsAre).toHaveBeenCalledWith('History')

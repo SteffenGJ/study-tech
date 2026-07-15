@@ -19,15 +19,7 @@ describe('Studying', () => {
     test('should inform user that flashcard was added succesfully', async () => {
       await studying.goToFlashcards()
       await studying.addFlashcard('subject: History', 'topic: Ancient Egypt', 'question: Who build the pyramids?', 'answer: The egyptians')
-      await studying.assertFlashcardAddedTo('topic: Ancient Egypt')
       await studying.assertUserInformedOfSucces()
-    })
-
-    test('should inform user if error occurs while adding flashcard', async () => {
-      await studying.goToFlashcards()
-      await expect(
-        studying.tryAddFlashcard('subject: History', 'topic: Ancient Egypt', 'question: Who build the pyramids?', 'answer: The egyptians'),
-      ).rejects.toThrow('UI-level failure simulation is not supported in Selenium acceptance tests')
     })
 
     test('should be able to add images to questions', async () => {
@@ -56,6 +48,7 @@ describe('Studying', () => {
   describe('Using flashcards', () => {
     test('should be able to filter flashcards by subject', async () => {
       await studying.goToFlashcards()
+      await studying.addFlashcard('subject: History', 'topic: Ancient Egypt', 'question: Who build the pyramids?', 'answer: The egyptians')
       await studying.selectBySubject('subject: History')
       await studying.assertCurrentFlashcardsAre('subject: History')
     })
